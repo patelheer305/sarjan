@@ -1,8 +1,10 @@
 {
+  "id": "/sarjan/",
   "name": "Sarjan",
   "short_name": "Sarjan",
   "description": "Saving material...",
   "start_url": "/sarjan/",
+  "scope": "/sarjan/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#d70000",
