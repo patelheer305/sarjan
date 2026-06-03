@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sarjan - Saving material...">
+  <meta name="theme-color" content="#d70000">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <title>Vishwakarma Cut Optimizer</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .logo-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      object-fit: contain;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen text-slate-700">
+
+  <!-- HEADER -->
+  <div class="bg-[#d70000] text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <img src="icon-512.png" alt="Vishwakarma Logo" class="logo-img border-2 border-white/30">
+        <div>
+          <h1 id="headerTitle" class="text-2xl sm:text-3xl font-bold">Sarjan</h1>
+          <p id="headerSubtitle" class="text-red-100 text-sm mt-1">Saving material...</p>
+        </div>
+      </div>
+      <div>
+        <select id="languageSelector" onchange="changeLanguage()" class="text-black rounded-xl px-3 py-2 text-sm bg-white">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="gu">ગુજરાતી</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN PAGE -->
+  <div id="mainPage" class="max-w-7xl mx-auto p-4 space-y-6">
+    <!-- SETTINGS -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label id="unitLabel" class="block text-sm font-medium mb-2">Unit System</label>
+          <select id="unitSystem" onchange="convertKerfOnUnitChange()" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
+            <option value="mm" id="unit_mm">Millimeter (mm)</option>
+            <option value="inch" id="unit_inch">Inch</option>
+            <option value="ft" id="unit_ft">Feet</option>
+            <option value="meter" id="unit_meter">Meter</option>
+          </select>
+        </div>
+        <div>
+          <label id="kerfLabel" class="block text-sm font-medium mb-2">Saw Kerf</label>
+          <input id="kerf" type="number" value="2" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- STOCK -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+        <h2 id="stockTitle" class="text-xl font-bold mb-4">Stock Materials</h2>
+        <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
+          <div class="col-span-5" id="stockLengthLabel">Length</div>
+          <div class="col-span-5" id="stockQtyLabel">Qty</div>
+        </div>
+        <div id="stockContainer" class="space-y-2"></div>
+        <button onclick="addStockRow()" id="addStockBtn" class="mt-4 w-full bg-[#d70000] hover:bg-[#b00000] text-white py-2 rounded-xl text-sm">
+          + Add Stock Row
+        </button>
+      </div>
+
+      <!-- CUTS -->
+      <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+        <h2 id="cutTitle" class="text-xl font-bold mb-4">Required Cuts</h2>
+        <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
+          <div class="col-span-5" id="cutLengthLabel">Length</div>
+          <div class="col-span-5" id="cutQtyLabel">Qty</div>
+        </div>
+        <div id="cutsContainer" class="space-y-2"></div>
+        <div class="flex flex-col sm:flex-row gap-3 mt-5">
+          <button onclick="addCutRow()" id="addCutBtn" class="bg-[#d70000] hover:bg-[#b00000] text-white px-4 py-2 rounded-xl text-sm w-full">
+            + Add Cut Row
+          </button>
+          <button onclick="optimizeCuts()" id="optimizeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm w-full">
+            Run Optimization
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const translations = {
+      en: { headerTitle: "Sarjan", headerSubtitle: "Saving material...", unit: "Unit System", kerf: "Saw Kerf", stock: "Stock Materials", cuts: "Required Cuts", length: "Length", qty: "Qty", addStock: "+ Add Stock Row", addCut: "+ Add Cut Row", optimize: "Run Optimization", saving: "Saving Material", resultTitle: "Optimization Result", reportTitle: "Optimization Report", kerfSize: "Kerf Size:", pattern: "Pattern", stockCol: "Stock", cutPattern: "Cut Pattern", repeat: "Repeat", used: "Used", waste: "Waste", utilization: "Utilization", visual: "Visual Layout", downloadPDF: "Download PDF Report", back: "← Back", insufficient: "Stock not sufficient", generatedBy: "Generated by Vishwakarma Cut Optimizer", unit_mm: "Millimeter (mm)", unit_inch: "Inch", unit_ft: "Feet", unit_meter: "Meter", remove: "×" },
+      hi: { headerTitle: "विश्वकर्मा कट ऑप्टिमाइजर", headerSubtitle: "प्रोफेशनल 1D मटेरियल सेवर", unit: "यूनिट सिस्टम", kerf: "सॉ कट मोटाई", stock: "स्टॉक सामग्री", cuts: "कटिंग सूची", length: "लंबाई", qty: "मात्रा", addStock: "+ स्टॉक जोड़ें", addCut: "+ कटिंग जोड़ें", optimize: "ऑप्टिमाइजेशन चलाएं", saving: "सामग्री बचाई जा रही है", resultTitle: "ऑप्टिमाइजेशन परिणाम", reportTitle: "ऑप्टिमाइजेशन रिपोर्ट", kerfSize: "कर्फ साइज:", pattern: "पैटर्न", stockCol: "स्टॉक", cutPattern: "कट पैटर्न", repeat: "दोहराएं", used: "उपयोग किया", waste: "वेस्ट", utilization: "उपयोगिता", visual: "विजुअल लेआउट", downloadPDF: "PDF रिपोर्ट डाउनलोड करें", back: "← वापस", insufficient: "स्टॉक पर्याप्त नहीं है", generatedBy: "विश्वकर्मा कट ऑप्टिमाइजर द्वारा जनरेट", unit_mm: "मिलीमीटर (mm)", unit_inch: "इंच", unit_ft: "फीट", unit_meter: "मीटर", remove: "×" },
+      gu: { headerTitle: "વિશ્વકર્મા કટ ઓપ્ટિમાઇઝર", headerSubtitle: "પ્રોફેશનલ 1D મટિરિયલ સેવર", unit: "યુનિટ સિસ્ટમ", kerf: "સો કર્ફ", stock: "સ્ટોક મટિરિયલ", cuts: "કટિંગ યાદી", length: "લંબાઈ", qty: "જથ્થો", addStock: "+ સ્ટોક ઉમેરો", addCut: "+ કટિંગ ઉમેરો", optimize: "ઓપ્ટિમાઇઝેશન ચલાવો", saving: "સામગ્રી બચાવી રહ્યા છીએ", resultTitle: "ઓપ્ટિમાઇઝેશન પરિણામ", reportTitle: "ઓપ્ટિમાઇઝેશન રિપોર્ટ", kerfSize: "કર્ફ સાઇઝ:", pattern: "પેટર્ન", stockCol: "સ્ટોક", cutPattern: "કટ પેટર્ન", repeat: "રિપીટ", used: "વપરાયેલ", waste: "વેસ્ટ", utilization: "ઉપયોગિતા", visual: "વિઝ્યુઅલ લેઆઉટ", downloadPDF: "PDF રિપોર્ટ ડાઉનલોડ કરો", back: "← પાછા", insufficient: "સ્ટોક પૂરતો નથી", generatedBy: "વિશ્વકર્મા કટ ઓપ્ટિમાઇઝર દ્વારા જનરેટ", unit_mm: "મિલીમીટર (mm)", unit_inch: "ઇંચ", unit_ft: "ફીટ", unit_meter: "મીટર", remove: "×" }
+    };
+
+    const pdfTranslations = {
+      headerTitle: "Vishwakarma Cut Optimizer",
+      kerfSize: "Kerf Size:",
+      pattern: "Pattern",
+      stockCol: "Stock",
+      cutPattern: "Cut Pattern",
+      repeat: "Repeat",
+      used: "Used",
+      waste: "Waste",
+      utilization: "Utilization",
+      visual: "Visual Layout",
+      generatedBy: "Generated by Vishwakarma Cut Optimizer"
+    };
+
+    function addStockRow(length='', qty=''){
+      const lang = document.getElementById('languageSelector').value || 'en';
+      const t = translations[lang];
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-12 gap-2';
+      row.innerHTML = `
+        <input type="number" class="stock-length col-span-5 border border-slate-200 rounded-xl p-2.5 bg-slate-50" placeholder="${t.length}" value="${length}">
+        <input type="number" class="stock-qty col-span-5 border border-slate-200 rounded-xl p-2.5 bg-slate-50" placeholder="${t.qty}" value="${qty}">
+        <button onclick="removeRow(this)" class="col-span-2 w-[42px] h-[42px] flex items-center justify-center bg-red-50 hover:bg-red-100 text-[#d70000] rounded-xl text-xl font-bold">×</button>
+      `;
+      document.getElementById('stockContainer').appendChild(row);
+    }
+
+    function addCutRow(length='', qty=''){
+      const lang = document.getElementById('languageSelector').value || 'en';
+      const t = translations[lang];
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-12 gap-2';
+      row.innerHTML = `
+        <input type="number" class="cut-length col-span-5 border border-slate-200 rounded-xl p-2.5 bg-slate-50" placeholder="${t.length}" value="${length}">
+        <input type="number" class="cut-qty col-span-5 border border-slate-200 rounded-xl p-2.5 bg-slate-50" placeholder="${t.qty}" value="${qty}">
+        <button onclick="removeRow(this)" class="col-span-2 w-[42px] h-[42px] flex items-center justify-center bg-red-50 hover:bg-red-100 text-[#d70000] rounded-xl text-xl font-bold">×</button>
+      `;
+      document.getElementById('cutsContainer').appendChild(row);
+    }
+
+    function removeRow(btn){
+      const parent = btn.parentElement.parentElement;
+      if(parent.children.length > 1) btn.parentElement.remove();
+    }
+
+    function changeLanguage(){
+      const lang = document.getElementById('languageSelector').value || 'en';
+      const t = translations[lang];
+
+      document.getElementById('headerTitle').innerText = t.headerTitle;
+      document.getElementById('headerSubtitle').innerText = t.headerSubtitle;
+      document.getElementById('unitLabel').innerText = t.unit;
+      document.getElementById('kerfLabel').innerText = t.kerf;
+      document.getElementById('stockTitle').innerText = t.stock;
+      document.getElementById('cutTitle').innerText = t.cuts;
+      document.getElementById('stockLengthLabel').innerText = t.length;
+      document.getElementById('stockQtyLabel').innerText = t.qty;
+      document.getElementById('cutLengthLabel').innerText = t.length;
+      document.getElementById('cutQtyLabel').innerText = t.qty;
+      document.getElementById('addStockBtn').innerText = t.addStock;
+      document.getElementById('addCutBtn').innerText = t.addCut;
+      document.getElementById('optimizeBtn').innerText = t.optimize;
+      document.getElementById('removeHeader').innerText = t.remove;
+      document.getElementById('removeHeader2').innerText = t.remove;
+
+      document.getElementById('unit_mm').innerText = t.unit_mm;
+      document.getElementById('unit_inch').innerText = t.unit_inch;
+      document.getElementById('unit_ft').innerText = t.unit_ft;
+      document.getElementById('unit_meter').innerText = t.unit_meter;
+    }
+
+    function mmToUnit(mm, unit) {
+      switch(unit) {
+        case 'mm': return mm;
+        case 'inch': return (mm / 25.4).toFixed(4);
+        case 'ft': return (mm / 304.8).toFixed(4);
+        case 'meter': return (mm / 1000).toFixed(4);
+        default: return mm;
+      }
+    }
+
+    function unitToMm(value, unit) {
+      const num = parseFloat(value) || 2;
+      switch(unit) {
+        case 'mm': return num;
+        case 'inch': return num * 25.4;
+        case 'ft': return num * 304.8;
+        case 'meter': return num * 1000;
+        default: return num;
+      }
+    }
+
+    function convertKerfOnUnitChange() {
+      const kerfInput = document.getElementById('kerf');
+      const newUnit = document.getElementById('unitSystem').value;
+      const prevUnit = localStorage.getItem('unit') || 'mm';
+      const valueInMm = unitToMm(kerfInput.value, prevUnit);
+      kerfInput.value = mmToUnit(valueInMm, newUnit);
+      localStorage.setItem('unit', newUnit);
+    }
+
+    function saveInputs(){
+      const stocks = [], cuts = [];
+      document.querySelectorAll('.stock-length').forEach((input, i) => {
+        stocks.push({ length: input.value, qty: document.querySelectorAll('.stock-qty')[i].value });
+      });
+      document.querySelectorAll('.cut-length').forEach((input, i) => {
+        cuts.push({ length: input.value, qty: document.querySelectorAll('.cut-qty')[i].value });
+      });
+
+      localStorage.setItem('stocks', JSON.stringify(stocks));
+      localStorage.setItem('cuts', JSON.stringify(cuts));
+      localStorage.setItem('kerf', document.getElementById('kerf').value);
+      localStorage.setItem('unit', document.getElementById('unitSystem').value);
+      localStorage.setItem('language', document.getElementById('languageSelector').value);
+      localStorage.setItem('savedPage', document.body.innerHTML);
+    }
+
+    function optimizeCuts(){
+      saveInputs();
+      const lang = document.getElementById('languageSelector').value || 'en';
+      const t = translations[lang];
+
+      document.body.innerHTML = `
+        <div class="min-h-screen bg-slate-100 flex items-center justify-center">
+          <div class="bg-white rounded-3xl shadow-lg p-10 text-center">
+            <div class="w-24 h-24 border-[10px] border-red-100 border-t-[#d70000] rounded-full spin mx-auto"></div>
+            <h2 class="text-3xl font-bold text-[#d70000] mt-8">${t.saving}</h2>
+          </div>
+        </div>
+      `;
+      setTimeout(runOptimization, 2000);
+    }
+
+    function runOptimization(){
+      const kerf = Number(localStorage.getItem('kerf'));
+      const unit = localStorage.getItem('unit');
+      const lang = localStorage.getItem('language') || 'en';
+      const t = translations[lang];
+      const stocks = JSON.parse(localStorage.getItem('stocks') || '[]');
+      const cuts = JSON.parse(localStorage.getItem('cuts') || '[]');
+
+      let availableStocks = [];
+      stocks.forEach(item => {
+        for(let i = 0; i < Number(item.qty); i++) availableStocks.push(Number(item.length));
+      });
+
+      let expandedCuts = [];
+      cuts.forEach(item => {
+        for(let i = 0; i < Number(item.qty); i++) expandedCuts.push(Number(item.length));
+      });
+
+      expandedCuts.sort((a,b) => b - a);
+      let bars = [];
+
+      for(const piece of expandedCuts){
+        let placed = false;
+        for(const bar of bars){
+          const needed = bar.cuts.length === 0 ? piece : piece + kerf;
+          if(bar.remaining >= needed){
+            bar.cuts.push(piece);
+            bar.remaining -= needed;
+            placed = true;
+            break;
+          }
+        }
+        if(!placed){
+          const stock = availableStocks.find(s => s >= piece);
+          if(!stock){
+            document.body.innerHTML = `
+              <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl shadow-lg p-10 text-center">
+                  <div class="w-24 h-24 rounded-full bg-red-100 text-[#d70000] flex items-center justify-center text-5xl mx-auto">!</div>
+                  <h2 class="text-3xl font-bold text-[#d70000] mt-8">${t.insufficient}</h2>
+                  <button onclick="goBack()" class="mt-8 bg-[#d70000] text-white px-6 py-3 rounded-2xl">${t.back}</button>
+                </div>
+              </div>
+            `;
+            return;
+          }
+          availableStocks.splice(availableStocks.indexOf(stock), 1);
+          bars.push({ stock, cuts: [piece], remaining: stock - piece });
+        }
+      }
+
+      const grouped = {};
+      bars.forEach(bar => {
+        const key = `${bar.stock}|${bar.cuts.join('-')}`;
+        if(!grouped[key]) grouped[key] = { stock: bar.stock, cuts: [...bar.cuts], remaining: bar.remaining, count: 1 };
+        else grouped[key].count++;
+      });
+
+      let rows = '', index = 1;
+      Object.values(grouped).forEach(bar => {
+        const used = bar.stock - bar.remaining;
+        const utilization = ((used / bar.stock) * 100).toFixed(1);
+        let visual = '';
+        bar.cuts.forEach(cut => {
+          visual += `<div class="bg-[#d70000] text-white text-xs flex items-center justify-center rounded-lg h-8" style="width:${(cut/bar.stock)*100}%; min-width:50px;">${cut}</div>`;
+        });
+        rows += `
+          <tr class="border-b">
+            <td class="p-3">${t.pattern} ${index}</td>
+            <td class="p-3">${bar.stock} ${unit}</td>
+            <td class="p-3">${bar.cuts.join(' + ')}</td>
+            <td class="p-3">× ${bar.count}</td>
+            <td class="p-3">${used} ${unit}</td>
+            <td class="p-3 text-[#d70000] font-semibold">${bar.remaining} ${unit}</td>
+            <td class="p-3">${utilization}%</td>
+            <td class="p-3 min-w-[250px]"><div class="flex gap-1">${visual}</div></td>
+          </tr>
+        `;
+        index++;
+      });
+
+      document.body.innerHTML = `
+        <div class="min-h-screen bg-slate-100 p-4">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+              <button onclick="goBack()" class="bg-white border border-slate-200 px-4 py-2 rounded-xl">${t.back}</button>
+              <h1 class="text-2xl font-bold text-[#d70000]">${t.resultTitle}</h1>
+            </div>
+            <div class="bg-white rounded-3xl border overflow-hidden">
+              <div class="bg-[#d70000] text-white p-5">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h2 class="text-2xl font-bold">${t.reportTitle}</h2>
+                    <p class="text-red-100 text-sm mt-1">${t.kerfSize} ${kerf} ${unit}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="overflow-auto">
+                <table class="w-full text-sm border-collapse">
+                  <thead>
+                    <tr class="bg-slate-100">
+                      <th class="border p-3 text-left">${t.pattern}</th>
+                      <th class="border p-3 text-left">${t.stockCol}</th>
+                      <th class="border p-3 text-left">${t.cutPattern}</th>
+                      <th class="border p-3 text-left">${t.repeat}</th>
+                      <th class="border p-3 text-left">${t.used}</th>
+                      <th class="border p-3 text-left">${t.waste}</th>
+                      <th class="border p-3 text-left">${t.utilization}</th>
+                      <th class="border p-3 text-left">${t.visual}</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+              <div class="p-5 border-t bg-slate-50">
+                <button onclick="downloadPDF()" class="w-full sm:w-auto bg-slate-800 hover:bg-black text-white py-3 px-5 rounded-2xl">${t.downloadPDF}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function goBack(){
+      document.body.innerHTML = localStorage.getItem('savedPage');
+      initializeFunctions();
+      const stocks = JSON.parse(localStorage.getItem('stocks') || '[]');
+      const cuts = JSON.parse(localStorage.getItem('cuts') || '[]');
+      document.getElementById('stockContainer').innerHTML = '';
+      document.getElementById('cutsContainer').innerHTML = '';
+      stocks.forEach(item => addStockRow(item.length, item.qty));
+      cuts.forEach(item => addCutRow(item.length, item.qty));
+      document.getElementById('kerf').value = localStorage.getItem('kerf');
+      document.getElementById('unitSystem').value = localStorage.getItem('unit');
+      document.getElementById('languageSelector').value = localStorage.getItem('language');
+      changeLanguage();
+    }
+
+    function initializeFunctions(){
+      window.addStockRow = addStockRow;
+      window.addCutRow = addCutRow;
+      window.removeRow = removeRow;
+      window.optimizeCuts = optimizeCuts;
+      window.changeLanguage = changeLanguage;
+      window.downloadPDF = downloadPDF;
+      window.goBack = goBack;
+      window.convertKerfOnUnitChange = convertKerfOnUnitChange;
+    }
+
+async function downloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('portrait', 'mm', 'a4');
+  const kerf = localStorage.getItem('kerf');
+  const unit = localStorage.getItem('unit') || 'mm';
+  const t = pdfTranslations;   // Always English
+
+  pdf.setFontSize(20);
+  pdf.setTextColor(215,0,0);
+  pdf.text(t.headerTitle, 10, 15);
+
+  pdf.setFontSize(10);
+  pdf.setTextColor(100);
+  pdf.text(`${t.kerfSize} ${kerf} ${unit}`, 10, 22);
+
+  const headers = [t.pattern, t.stockCol, t.cutPattern, t.repeat, t.used, t.waste, t.utilization];
+  const colWidths = [25, 24, 55, 18, 22, 22, 24];
+  let y = 35, startX = 8;
+
+  // Header Row
+  let currentX = startX;
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+
+  headers.forEach((header, i) => {
+    pdf.setFillColor(215,0,0);
+    pdf.rect(currentX, y, colWidths[i], 10, 'FD');
+    pdf.setTextColor(255,255,255);
+    pdf.text(String(header), currentX + 1.5, y + 6);
+    currentX += colWidths[i];
+  });
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(40,40,40);
+  y += 10;
+
+  // Get table rows from DOM but force English for "Pattern"
+  const tableRows = document.querySelectorAll('tbody tr');
+
+  tableRows.forEach(row => {
+    if(y > 260){ 
+      pdf.addPage(); 
+      y = 20; 
+    }
+
+    const cols = row.querySelectorAll('td');
+    let currentX = startX;
+    let maxRowHeight = 12;
+
+    for(let i = 0; i < 7; i++){
+      let text = cols[i] ? cols[i].innerText || '' : '';
+
+      // FORCE ENGLISH FOR PATTERN COLUMN (Column 0)
+      if(i === 0 && text.includes('पैटर्न') || text.includes('પેટર્ન')) {
+        text = text.replace(/.*?(?=\d)/, t.pattern + " ");
+      }
+
+      const wrapped = pdf.splitTextToSize(text, colWidths[i] - 2);
+      let rowHeight = 12;
+      if(wrapped.length > 1) rowHeight = (wrapped.length * 5) + 2;
+
+      pdf.rect(currentX, y, colWidths[i], rowHeight);
+      pdf.text(wrapped, currentX + 1.5, y + 6);
+      
+      maxRowHeight = Math.max(maxRowHeight, rowHeight);
+      currentX += colWidths[i];
+    }
+    y += maxRowHeight;
+  });
+
+  pdf.setFontSize(8);
+  pdf.setTextColor(120);
+  pdf.text(t.generatedBy, 8, 285);
+
+  pdf.save('vishwakarma-optimization-report.pdf');
+}
+    // Initialize App
+    if (!localStorage.getItem('kerf')) {
+      document.getElementById('kerf').value = "2";
+      document.getElementById('unitSystem').value = "mm";
+    }
+    addStockRow();
+    addCutRow();
+    changeLanguage();
+    initializeFunctions();
+  </script>
+</body>
+</html>
