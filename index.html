@@ -343,7 +343,6 @@
       const lang = document.getElementById('languageSelector').value || 'en';
       const t = translations[lang];
 
-      // Hide language dropdown container on results page
       document.getElementById('languageSelectorContainer').classList.add('hidden');
 
       document.getElementById('mainPage').innerHTML = `
@@ -424,14 +423,14 @@
           visual += `<div class="bg-[#d70000] text-white text-xs flex items-center justify-center rounded-lg h-8" style="width:${(cut/bar.stock)*100}%; min-width:50px;">${cut}</div>`;
         });
         rows += `
-          <tr class="border-b">
-            <td class="p-3">${t.pattern} ${index}</td>
-            <td class="p-3">${bar.stock} ${unit}</td>
-            <td class="p-3">${bar.cuts.join(' + ')}</td>
-            <td class="p-3">× ${bar.count}</td>
-            <td class="p-3">${used} ${unit}</td>
-            <td class="p-3 text-[#d70000] font-semibold">${bar.remaining} ${unit}</td>
-            <td class="p-3">${utilization}%</td>
+          <tr class="border-b border-slate-200">
+            <td class="p-3 border-r border-slate-200">${t.pattern} ${index}</td>
+            <td class="p-3 border-r border-slate-200">${bar.stock} ${unit}</td>
+            <td class="p-3 border-r border-slate-200">${bar.cuts.join(' + ')}</td>
+            <td class="p-3 border-r border-slate-200">× ${bar.count}</td>
+            <td class="p-3 border-r border-slate-200">${used} ${unit}</td>
+            <td class="p-3 border-r border-slate-200 text-[#d70000] font-semibold">${bar.remaining} ${unit}</td>
+            <td class="p-3 border-r border-slate-200">${utilization}%</td>
             <td class="p-3 min-w-[250px]"><div class="flex gap-1">${visual}</div></td>
           </tr>
         `;
@@ -445,7 +444,7 @@
               <button onclick="goBack()" class="bg-white border border-slate-200 px-4 py-2 rounded-xl">${t.back}</button>
               <h1 class="text-2xl font-bold text-[#d70000]">${t.resultTitle}</h1>
             </div>
-            <div class="bg-white rounded-3xl border overflow-hidden">
+            <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden">
               <div class="bg-[#d70000] text-white p-5">
                 <div class="flex justify-between items-center">
                   <div>
@@ -457,21 +456,21 @@
               <div class="overflow-auto">
                 <table class="w-full text-sm border-collapse">
                   <thead>
-                    <tr class="bg-slate-100">
-                      <th class="border p-3 text-left">${t.pattern}</th>
-                      <th class="border p-3 text-left">${t.stockCol}</th>
-                      <th class="border p-3 text-left">${t.cutPattern}</th>
-                      <th class="border p-3 text-left">${t.repeat}</th>
-                      <th class="border p-3 text-left">${t.used}</th>
-                      <th class="border p-3 text-left">${t.waste}</th>
-                      <th class="border p-3 text-left">${t.utilization}</th>
-                      <th class="border p-3 text-left">${t.visual}</th>
+                    <tr class="bg-slate-100 border-b border-slate-200">
+                      <th class="p-3 text-left border-r border-slate-200">${t.pattern}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.stockCol}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.cutPattern}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.repeat}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.used}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.waste}</th>
+                      <th class="p-3 text-left border-r border-slate-200">${t.utilization}</th>
+                      <th class="p-3 text-left">${t.visual}</th>
                     </tr>
                   </thead>
                   <tbody>${rows}</tbody>
                 </table>
               </div>
-              <div class="p-5 border-t bg-slate-50">
+              <div class="p-5 border-t border-slate-200 bg-slate-50">
                 <button onclick="downloadPDF()" class="w-full sm:w-auto bg-slate-800 hover:bg-black text-white py-3 px-5 rounded-2xl">${t.downloadPDF}</button>
               </div>
             </div>
@@ -481,7 +480,6 @@
     }
 
     function goBack(){
-      // Re-enable language selection panel upon returning to dashboard
       document.getElementById('languageSelectorContainer').classList.remove('hidden');
 
       document.getElementById('mainPage').innerHTML = `
@@ -491,7 +489,6 @@
         <div id="privacyPolicyView" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-10 space-y-6"></div>
       `;
       
-      // Restore dynamic markup blocks
       document.getElementById('privacyPolicyView').innerHTML = privacyTemplate;
 
       initializeFunctions();
@@ -507,14 +504,10 @@
       changeLanguage();
     }
 
-    // In-App Native Routing Engine for Privacy Subpanel
     function openPrivacyPolicy() {
-      // Hide the language selector on the Privacy Policy page
       document.getElementById('languageSelectorContainer').classList.add('hidden');
-
       const calcView = document.getElementById('calculatorView');
       if (calcView) calcView.classList.add('hidden');
-      
       const privView = document.getElementById('privacyPolicyView');
       if (privView) {
         privView.classList.remove('hidden');
@@ -523,12 +516,9 @@
     }
 
     function closePrivacyPolicy() {
-      // Restore the language selector when returning to the app workspace
       document.getElementById('languageSelectorContainer').classList.remove('hidden');
-
       const privView = document.getElementById('privacyPolicyView');
       if (privView) privView.classList.add('hidden');
-      
       const calcView = document.getElementById('calculatorView');
       if (calcView) calcView.classList.remove('hidden');
     }
@@ -584,30 +574,39 @@
       const tableRows = document.querySelectorAll('tbody tr');
 
       tableRows.forEach(row => {
-        if(y > 260){ 
+        const cols = row.querySelectorAll('td');
+        let parsedRowTexts = [];
+        let maxRowHeight = 12; // Minimum baseline height for a row
+
+        // First pass: extract text contents and compute the single maximum stretched row height
+        for(let i = 0; i < 7; i++){
+          let text = cols[i] ? cols[i].innerText || '' : '';
+          if(i === 0 && (text.includes('पैटर्न') || text.includes('પેટર્ન'))) {
+            text = text.replace(/.*?(?=\d)/, t.pattern + " ");
+          }
+          
+          const splitLines = pdf.splitTextToSize(text, colWidths[i] - 2);
+          parsedRowTexts.push(splitLines);
+
+          // Standard text spacing sizing rule: line count multiplied by 5mm text height + padding box margins
+          let calculatedCellHeight = 12;
+          if(splitLines.length > 1) {
+            calculatedCellHeight = (splitLines.length * 5) + 3;
+          }
+          maxRowHeight = Math.max(maxRowHeight, calculatedCellHeight);
+        }
+
+        // Manage pagination boundaries gracefully before executing block prints
+        if(y + maxRowHeight > 275){ 
           pdf.addPage(); 
           y = 20; 
         }
 
-        const cols = row.querySelectorAll('td');
+        // Second pass: Draw layout cells stretched uniformly to match calculated maxRowHeight
         let currentX = startX;
-        let maxRowHeight = 12;
-
         for(let i = 0; i < 7; i++){
-          let text = cols[i] ? cols[i].innerText || '' : '';
-
-          if(i === 0 && (text.includes('पैटर्न') || text.includes('પેટર્ન'))) {
-            text = text.replace(/.*?(?=\d)/, t.pattern + " ");
-          }
-
-          const wrapped = pdf.splitTextToSize(text, colWidths[i] - 2);
-          let rowHeight = 12;
-          if(wrapped.length > 1) rowHeight = (wrapped.length * 5) + 2;
-
-          pdf.rect(currentX, y, colWidths[i], rowHeight);
-          pdf.text(wrapped, currentX + 1.5, y + 6);
-          
-          maxRowHeight = Math.max(maxRowHeight, rowHeight);
+          pdf.rect(currentX, y, colWidths[i], maxRowHeight);
+          pdf.text(parsedRowTexts[i], currentX + 1.5, y + 6);
           currentX += colWidths[i];
         }
         y += maxRowHeight;
@@ -620,7 +619,6 @@
       pdf.save('sarjan-optimization-report.pdf');
     }
 
-    // Preserve Privacy HTML Structure to safely remount on page back-stack mutations
     const privacyTemplate = `
         <div class="flex items-center justify-between">
           <div>
@@ -670,7 +668,6 @@
         </div>
     `;
 
-    // Initialize App
     if (!localStorage.getItem('kerf')) {
       document.getElementById('kerf').value = "2";
       document.getElementById('unitSystem').value = "mm";
