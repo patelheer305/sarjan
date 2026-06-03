@@ -6,7 +6,6 @@
   <meta name="description" content="Sarjan - Saving material...">
   <meta name="theme-color" content="#d70000">
   
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -35,7 +34,6 @@
 
 <body class="bg-slate-100 min-h-screen text-slate-700 flex flex-col">
 
-  <!-- HEADER -->
   <div class="bg-[#d70000] text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3">
@@ -45,7 +43,7 @@
           <p id="headerSubtitle" class="text-red-100 text-sm mt-1">Saving material...</p>
         </div>
       </div>
-      <div>
+      <div id="languageSelectorContainer">
         <select id="languageSelector" onchange="changeLanguage()" class="text-black rounded-xl px-3 py-2 text-sm bg-white">
           <option value="en">English</option>
           <option value="hi">हिन्दी</option>
@@ -55,77 +53,122 @@
     </div>
   </div>
 
-  <!-- MAIN WRAPPER FOR STICKY FOOTER -->
   <div class="flex-grow">
-    <!-- MAIN PAGE -->
     <div id="mainPage" class="max-w-7xl mx-auto p-4 space-y-6">
-      <!-- SETTINGS -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label id="unitLabel" class="block text-sm font-medium mb-2">Unit System</label>
-            <select id="unitSystem" onchange="convertKerfOnUnitChange()" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
-              <option value="mm" id="unit_mm">Millimeter (mm)</option>
-              <option value="inch" id="unit_inch">Inch</option>
-              <option value="ft" id="unit_ft">Feet</option>
-              <option value="meter" id="unit_meter">Meter</option>
-            </select>
+      
+      <div id="calculatorView" class="space-y-6">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label id="unitLabel" class="block text-sm font-medium mb-2">Unit System</label>
+              <select id="unitSystem" onchange="convertKerfOnUnitChange()" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
+                <option value="mm" id="unit_mm">Millimeter (mm)</option>
+                <option value="inch" id="unit_inch">Inch</option>
+                <option value="ft" id="unit_ft">Feet</option>
+                <option value="meter" id="unit_meter">Meter</option>
+              </select>
+            </div>
+            <div>
+              <label id="kerfLabel" class="block text-sm font-medium mb-2">Saw Kerf</label>
+              <input id="kerf" type="number" value="2" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
+            </div>
           </div>
-          <div>
-            <label id="kerfLabel" class="block text-sm font-medium mb-2">Saw Kerf</label>
-            <input id="kerf" type="number" value="2" class="w-full border border-slate-200 rounded-xl p-2.5 bg-slate-50">
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+            <h2 id="stockTitle" class="text-xl font-bold mb-4">Stock Materials</h2>
+            <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
+              <div class="col-span-5" id="stockLengthLabel">Length</div>
+              <div class="col-span-5" id="stockQtyLabel">Qty</div>
+            </div>
+            <div id="stockContainer" class="space-y-2"></div>
+            <button onclick="addStockRow()" id="addStockBtn" class="mt-4 w-full bg-[#d70000] hover:bg-[#b00000] text-white py-2 rounded-xl text-sm">
+              + Add Stock Row
+            </button>
           </div>
+
+          <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
+            <h2 id="cutTitle" class="text-xl font-bold mb-4">Required Cuts</h2>
+            <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
+              <div class="col-span-5" id="cutLengthLabel">Length</div>
+              <div class="col-span-5" id="cutQtyLabel">Qty</div>
+            </div>
+            <div id="cutsContainer" class="space-y-2"></div>
+            <div class="flex flex-col sm:flex-row gap-3 mt-5">
+              <button onclick="addCutRow()" id="addCutBtn" class="bg-[#d70000] hover:bg-[#b00000] text-white px-4 py-2 rounded-xl text-sm w-full">
+                + Add Cut Row
+              </button>
+              <button onclick="optimizeCuts()" id="optimizeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm w-full">
+                Run Optimization
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 mt-6">
+          <h2 id="howToUseTitle" class="text-xl font-bold mb-4 text-slate-800">How to Use This App</h2>
+          <ol id="howToUseSteps" class="list-decimal list-inside space-y-3 text-sm text-slate-600">
+            <li>Select your preferred measurement layout from the <strong>Unit System</strong> menu and enter the <strong>Saw Kerf</strong> (cutting blade width).</li>
+            <li>Input the available inventory dimensions and counts under the <strong>Stock Materials</strong> panel.</li>
+            <li>Enter your required specific target cutting sizes and amounts into the <strong>Required Cuts</strong> section.</li>
+            <li>Click <strong>Run Optimization</strong> to instantly calculate the absolute most efficient layout blueprint to heavily minimize raw scrap waste!</li>
+          </ol>
         </div>
       </div>
 
-      <!-- INPUT AREA -->
-      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <!-- STOCK -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
-          <h2 id="stockTitle" class="text-xl font-bold mb-4">Stock Materials</h2>
-          <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
-            <div class="col-span-5" id="stockLengthLabel">Length</div>
-            <div class="col-span-5" id="stockQtyLabel">Qty</div>
+      <div id="privacyPolicyView" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-10 space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">Privacy Policy</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Last updated: June 2026</p>
           </div>
-          <div id="stockContainer" class="space-y-2"></div>
-          <button onclick="addStockRow()" id="addStockBtn" class="mt-4 w-full bg-[#d70000] hover:bg-[#b00000] text-white py-2 rounded-xl text-sm">
-            + Add Stock Row
+          <button onclick="closePrivacyPolicy()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-4 py-2 rounded-xl transition-all">
+            &larr; Return to App
           </button>
         </div>
-
-        <!-- CUTS -->
-        <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-4">
-          <h2 id="cutTitle" class="text-xl font-bold mb-4">Required Cuts</h2>
-          <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-semibold text-slate-500">
-            <div class="col-span-5" id="cutLengthLabel">Length</div>
-            <div class="col-span-5" id="cutQtyLabel">Qty</div>
-          </div>
-          <div id="cutsContainer" class="space-y-2"></div>
-          <div class="flex flex-col sm:flex-row gap-3 mt-5">
-            <button onclick="addCutRow()" id="addCutBtn" class="bg-[#d70000] hover:bg-[#b00000] text-white px-4 py-2 rounded-xl text-sm w-full">
-              + Add Cut Row
-            </button>
-            <button onclick="optimizeCuts()" id="optimizeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm w-full">
-              Run Optimization
-            </button>
+        <hr class="border-slate-100" />
+        <p class="text-sm leading-relaxed text-slate-600">
+          Welcome to <strong>Sarjan</strong>. We highly value your trust and are fully committed to protecting your personal information. This policy explicitly documents our privacy operations across deployments, including the Google Play Store.
+        </p>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">1. Information Collection and Use</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Sarjan is engineered to run zero external pipeline processes:
+          </p>
+          <ul class="list-disc list-inside text-sm text-slate-600 pl-2 space-y-1">
+            <li><strong>No Personal Data:</strong> The application does not collect, track, query, or store identities, account logs, or contact records.</li>
+            <li><strong>Local Computations:</strong> Your inventory matrices, measurements, cutting details, and configuration figures are completely calculated inside your machine sandbox.</li>
+            <li><strong>Device Cache Memory:</strong> Configuration variables cache straight to local context hardware storage (<code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-red-600">localStorage</code>) strictly to prevent input data dropouts upon system context updates or app resets.</li>
+          </ul>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">2. PDF Generator Assets</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Exported data sheets assemble directly into document memory layers client-side. No calculation matrices or project values migrate onto outside host elements to finalize structural documents.
+          </p>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">3. Play Store Service Modules</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Core binaries function inside Google system containers. System analytics run securely through target infrastructure packages for basic app crash logging and performance checking. Review comprehensive structures at the <a href="https://policies.google.com/privacy" target="_blank" class="text-blue-600 hover:underline">Google Privacy Policy</a> tracking space.
+          </p>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">4. Global Communications Contact</h3>
+          <p class="text-sm text-slate-600">
+            Direct your data management compliance questions directly to our support endpoint channel at:
+          </p>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm mt-1 max-w-sm">
+            <p class="font-semibold text-slate-800">Support Email:</p>
+            <a href="mailto:patelheer305@gmail.com" class="text-[#d70000] font-medium hover:underline">patelheer305@gmail.com</a>
           </div>
         </div>
       </div>
 
-      <!-- HOW TO USE SECTION -->
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 mt-6">
-        <h2 id="howToUseTitle" class="text-xl font-bold mb-4 text-slate-800">How to Use This App</h2>
-        <ol id="howToUseSteps" class="list-decimal list-inside space-y-3 text-sm text-slate-600">
-          <li>Select your preferred measurement layout from the <strong>Unit System</strong> menu and enter the <strong>Saw Kerf</strong> (cutting blade width).</li>
-          <li>Input the available inventory dimensions and counts under the <strong>Stock Materials</strong> panel.</li>
-          <li>Enter your required specific target cutting sizes and amounts into the <strong>Required Cuts</strong> section.</li>
-          <li>Click <strong>Run Optimization</strong> to instantly calculate the absolute most efficient layout blueprint to heavily minimize raw scrap waste!</li>
-        </ol>
-      </div>
     </div>
   </div>
 
-  <!-- PERMANENT FOOTER -->
   <footer class="bg-slate-800 text-slate-400 text-sm border-t border-slate-700 mt-auto">
     <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
       <div>
@@ -133,7 +176,7 @@
         <a href="mailto:patelheer305@gmail.com" class="text-white hover:text-red-400 transition-colors">patelheer305@gmail.com</a>
       </div>
       <div>
-        <a href="privacy.html" target="_blank" class="text-slate-300 hover:text-white underline transition-colors">Privacy Policy</a>
+        <button onclick="openPrivacyPolicy()" class="text-slate-300 hover:text-white underline transition-colors focus:outline-none">Privacy Policy</button>
       </div>
     </div>
   </footer>
@@ -235,11 +278,6 @@
       document.getElementById('addCutBtn').innerText = t.addCut;
       document.getElementById('optimizeBtn').innerText = t.optimize;
 
-      const rHeader = document.getElementById('removeHeader');
-      if(rHeader) rHeader.innerText = t.remove;
-      const rHeader2 = document.getElementById('removeHeader2');
-      if(rHeader2) rHeader2.innerText = t.remove;
-
       document.getElementById('unit_mm').innerText = t.unit_mm;
       document.getElementById('unit_inch').innerText = t.unit_inch;
       document.getElementById('unit_ft').innerText = t.unit_ft;
@@ -263,7 +301,6 @@
       }
     }
 
-    // Function declarations continue securely unchanged
     function unitToMm(value, unit) {
       const num = parseFloat(value) || 2;
       switch(unit) {
@@ -298,13 +335,16 @@
       localStorage.setItem('kerf', document.getElementById('kerf').value);
       localStorage.setItem('unit', document.getElementById('unitSystem').value);
       localStorage.setItem('language', document.getElementById('languageSelector').value);
-      localStorage.setItem('savedPage', document.getElementById('mainPage').innerHTML);
+      localStorage.setItem('savedPage', document.getElementById('calculatorView').innerHTML);
     }
 
     function optimizeCuts(){
       saveInputs();
       const lang = document.getElementById('languageSelector').value || 'en';
       const t = translations[lang];
+
+      // Hide language dropdown container on results page
+      document.getElementById('languageSelectorContainer').classList.add('hidden');
 
       document.getElementById('mainPage').innerHTML = `
         <div class="min-h-[60vh] flex items-center justify-center">
@@ -441,7 +481,19 @@
     }
 
     function goBack(){
-      document.getElementById('mainPage').innerHTML = localStorage.getItem('savedPage');
+      // Re-enable language selection panel upon returning to dashboard
+      document.getElementById('languageSelectorContainer').classList.remove('hidden');
+
+      document.getElementById('mainPage').innerHTML = `
+        <div id="calculatorView" class="space-y-6">
+          ${localStorage.getItem('savedPage')}
+        </div>
+        <div id="privacyPolicyView" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-10 space-y-6"></div>
+      `;
+      
+      // Restore dynamic markup blocks
+      document.getElementById('privacyPolicyView').innerHTML = privacyTemplate;
+
       initializeFunctions();
       const stocks = JSON.parse(localStorage.getItem('stocks') || '[]');
       const cuts = JSON.parse(localStorage.getItem('cuts') || '[]');
@@ -455,6 +507,32 @@
       changeLanguage();
     }
 
+    // In-App Native Routing Engine for Privacy Subpanel
+    function openPrivacyPolicy() {
+      // Hide the language selector on the Privacy Policy page
+      document.getElementById('languageSelectorContainer').classList.add('hidden');
+
+      const calcView = document.getElementById('calculatorView');
+      if (calcView) calcView.classList.add('hidden');
+      
+      const privView = document.getElementById('privacyPolicyView');
+      if (privView) {
+        privView.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function closePrivacyPolicy() {
+      // Restore the language selector when returning to the app workspace
+      document.getElementById('languageSelectorContainer').classList.remove('hidden');
+
+      const privView = document.getElementById('privacyPolicyView');
+      if (privView) privView.classList.add('hidden');
+      
+      const calcView = document.getElementById('calculatorView');
+      if (calcView) calcView.classList.remove('hidden');
+    }
+
     function initializeFunctions(){
       window.addStockRow = addStockRow;
       window.addCutRow = addCutRow;
@@ -464,6 +542,8 @@
       window.downloadPDF = downloadPDF;
       window.goBack = goBack;
       window.convertKerfOnUnitChange = convertKerfOnUnitChange;
+      window.openPrivacyPolicy = openPrivacyPolicy;
+      window.closePrivacyPolicy = closePrivacyPolicy;
     }
 
     async function downloadPDF(){
@@ -540,6 +620,56 @@
       pdf.save('sarjan-optimization-report.pdf');
     }
 
+    // Preserve Privacy HTML Structure to safely remount on page back-stack mutations
+    const privacyTemplate = `
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">Privacy Policy</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Last updated: June 2026</p>
+          </div>
+          <button onclick="closePrivacyPolicy()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-4 py-2 rounded-xl transition-all">
+            &larr; Return to App
+          </button>
+        </div>
+        <hr class="border-slate-100" />
+        <p class="text-sm leading-relaxed text-slate-600">
+          Welcome to <strong>Sarjan</strong>. We highly value your trust and are fully committed to protecting your personal information. This policy explicitly documents our privacy operations across deployments, including the Google Play Store.
+        </p>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">1. Information Collection and Use</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Sarjan is engineered to run zero external pipeline processes:
+          </p>
+          <ul class="list-disc list-inside text-sm text-slate-600 pl-2 space-y-1">
+            <li><strong>No Personal Data:</strong> The application does not collect, track, query, or store identities, account logs, or contact records.</li>
+            <li><strong>Local Computations:</strong> Your inventory matrices, measurements, cutting details, and configuration figures are completely calculated inside your machine sandbox.</li>
+            <li><strong>Device Cache Memory:</strong> Configuration variables cache straight to local context hardware storage (<code>localStorage</code>) strictly to prevent input data dropouts upon system context updates or app resets.</li>
+          </ul>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">2. PDF Generator Assets</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Exported data sheets assemble directly into document memory layers client-side. No calculation matrices or project values migrate onto outside host elements to finalize structural documents.
+          </p>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">3. Play Store Service Modules</h3>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Core binaries function inside Google system containers. System analytics run securely through target infrastructure packages for basic app crash logging and performance checking. Review comprehensive structures at the <a href="https://policies.google.com/privacy" target="_blank" class="text-blue-600 hover:underline">Google Privacy Policy</a> tracking space.
+          </p>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-base font-bold text-[#d70000]">4. Global Communications Contact</h3>
+          <p class="text-sm text-slate-600">
+            Direct your data management compliance questions directly to our support endpoint channel at:
+          </p>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm mt-1 max-w-sm">
+            <p class="font-semibold text-slate-800">Support Email:</p>
+            <a href="mailto:patelheer305@gmail.com" class="text-[#d70000] font-medium hover:underline">patelheer305@gmail.com</a>
+          </div>
+        </div>
+    `;
+
     // Initialize App
     if (!localStorage.getItem('kerf')) {
       document.getElementById('kerf').value = "2";
@@ -549,6 +679,7 @@
     addCutRow();
     changeLanguage();
     initializeFunctions();
+    document.getElementById('privacyPolicyView').innerHTML = privacyTemplate;
   </script>
 </body>
 </html>
